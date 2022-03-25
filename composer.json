@@ -1,0 +1,39 @@
+{
+    "name": "davidxu/yii2-base",
+    "description": "This is a base library with set of foundation classes and components used by all Yii2 extensions by David Xu.",
+    "type": "yii2-extension",
+    "license": "MIT",
+    "keywords": [
+        "yii2 extension",
+        "base library",
+        "yii2"
+    ],
+    "authors": [
+        {
+            "name": "David Xu",
+            "email": "david.xu.uts@163.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.4.0",
+        "yiisoft/yii2": "^2.0.13",
+        "yiisoft/yii2-bootstrap4": "^2.0",
+        "fortawesome/font-awesome": "^5.15",
+        "ramsey/uuid": "^4.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.0"
+    },
+    "repositories":[
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "davidxu\\base\\": "src/"
+        }
+    }
+}
