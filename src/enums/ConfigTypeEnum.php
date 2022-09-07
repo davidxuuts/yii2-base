@@ -55,4 +55,15 @@ class ConfigTypeEnum extends BaseEnum
             self::CONFIT_LAT_LNG => Yii::t('configtr', 'LatLngSelection'),
         ];
     }
+
+    public static function hasAttachment(): array
+    {
+        return [
+            self::CONFIT_IMAGE,
+            self::CONFIT_IMAGES,
+            self::CONFIT_FILE,
+            self::CONFIT_FILES,
+            self::CONFIT_CROPPER,
+        ];
+    }
 }
