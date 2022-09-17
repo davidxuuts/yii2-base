@@ -21,6 +21,7 @@
         "yiisoft/yii2-bootstrap4": "^2.0",
         "fortawesome/font-awesome": "^5.15",
         "yiisoft/yii2-imagine": "^2.3.0",
+        "qiniu/php-sdk": "^7.6",
         "ramsey/uuid": "^4.0"
     },
     "require-dev": {
