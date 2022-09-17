@@ -139,4 +139,46 @@ class StringHelper extends YiiStringHelper
         return Html::getInputIdByName($name);
     }
 
+    /**
+     * @param string|int $size
+     * @return float|int|mixed
+     */
+    public static function getSizeInByte($size)
+    {
+        preg_match('/([0-9]+)/', $size, $matches);
+        $number = $matches ? $matches[0] : 0;
+        preg_match('/([a-zA-Z])/', $size, $matches);
+        $unit = $matches ? $matches[0] : '';
+        $unit = strtoupper($unit);
+        return match ($unit) {
+            'K' => $number * 1024,
+            'M' => $number * pow(1024, 2),
+            'G' => $number * pow(1024, 3),
+            'T' => $number * pow(1024, 4),
+            default => $number,
+        };
+    }
+
+    /**
+     * 转驼峰
+     * @param string $uncamelized_words
+     * @param string $separator
+     * @return string
+     */
+    public static function camelize($uncamelized_words, $separator='_')
+    {
+        $uncamelized_words = $separator. str_replace($separator, " ", strtolower($uncamelized_words));
+        return ltrim(str_replace(" ", "", ucwords($uncamelized_words)), $separator );
+    }
+
+    /**
+     * 转下划线或其它字符
+     * @param string $camelCaps
+     * @param string $separator
+     * @return string
+     */
+    public static function underlineze($camelCaps, $separator='_')
+    {
+        return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
+    }
 }

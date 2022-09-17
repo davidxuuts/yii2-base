@@ -7,6 +7,7 @@ return [
 
     //Common
     '{attribute} cannot be blank.' => '{attribute}不能为空',
+    'Invalid configuration: {attribute}' => '无效配置: {attribute}',
     'Saved successfully' => '保存成功',
     'Deleted successfully' => '删除成功',
     'Updated successfully' => '更新成功',
@@ -14,6 +15,8 @@ return [
     'Data not found' => '资源未找到',
     'Error message not fount' => '未捕获到错误信息',
     'Request error' => '请求错误',
+    'Response error' => '处理失败',
+    'Anonymous user is not allowed, please login first' => '不允许匿名用户，请先登录',
 
     //Config Type
     'Text' => '文本框',
@@ -28,6 +31,7 @@ return [
     'RadioList' => '单选按钮',
     'CheckboxList' => '复选框',
     'UEditor' => 'UEditor',
+    'Editor' => '图文编辑器',
     'Image' => '图片上传',
     'Images' => '多图上传',
     'File' => '文件上传',

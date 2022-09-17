@@ -5,6 +5,7 @@ return [
     'Male' => 'Male',
     'Female' => 'Female',
     'Unknown' => 'Unknown',
+    'Anonymous user is not allowed, please login first' => 'Anonymous user is not allowed, please login first',
 
     //Config Type
     'Text' => 'Text',
