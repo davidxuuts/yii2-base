@@ -1,13 +1,13 @@
 <?php
 
-namespace davidxu\sweetalert2;
+namespace davidxu\base;
 
-use davidxu\sweetalert2\assets\SweetConfirmAsset;
+use davidxu\base\assets\SweetConfirmAsset;
 use Yii;
 use yii\bootstrap4\Widget;
 use yii\helpers\Json;
 use yii\helpers\ArrayHelper;
-use davidxu\sweetalert2\assets\SweetAlert2Asset;
+use davidxu\base\assets\SweetAlert2Asset;
 use yii\web\JsExpression;
 
 /**
@@ -16,7 +16,7 @@ use yii\web\JsExpression;
  *
  * ```php
  * <section class="content">
- * <?php echo davidxu\sweetalter2\SweetAlter2::widget([
+ * <?php echo davidxu\base\SweetAlter2::widget([
  *      // options => [
  *          // 'position' => 'top-end',
  *          // 'timerProgressBar' => true,
@@ -35,7 +35,7 @@ use yii\web\JsExpression;
  *  ```
  *
  * @see https://sweetalert2.github.io/
- * @package davidxu\sweetalert2
+ * @package davidxu\base
  * @property array $options Custom toast options
  */
 class SweetAlert2 extends Widget
