@@ -21,6 +21,7 @@ class BaseAppAsset extends AssetBundle
      */
     public $js = [
         'js/common.js',
+        'js/jquery.i18n.js',
     ];
     public $css = [];
 
@@ -29,7 +30,6 @@ class BaseAppAsset extends AssetBundle
         BootstrapAsset::class,
         BootstrapPluginAsset::class,
         FontAwesomeAsset::class,
-        SweetAlert2Asset::class,
         SweetConfirmAsset::class,
     ];
 }

@@ -30,8 +30,6 @@ class BaseAction extends Action
     /** @var bool */
     public $allowAnony = false;
 
-//    /** @var bool  */
-//    public $storeInDB = true;
     /** @var ActiveRecord  */
     public $attachmentModel = Attachment::class;
 
@@ -57,12 +55,13 @@ class BaseAction extends Action
     {
         $model = $this->attachmentModel::findOne(['hash' => $params['hash']]);
         if ($model) {
-            if (!$model->poster) {
+            if (!($model->poster) || $model->poster === '') {
                 $model->poster = '/images/default-video.jpg';
             }
+            $model->path = $this->url . $model->path;
             $result = [
                 'success' => true,
-                'result' => $model,
+                'response' => $model,
             ];
         } else {
             $result = [
@@ -118,25 +117,24 @@ class BaseAction extends Action
                 $model->poster = $model->poster ? $this->url . $model->path : null;
                 $result = [
                     'success' => true,
-                    'result' => $model,
+                    'response' => $model,
                 ];
             } else {
                 $msg = YII_ENV_PROD
-                    ? Yii::t('dropzone', 'Data writting error')
+                    ? Yii::t('base', 'Data writting error')
                     : array_values($model->getFirstErrors())[0];
                 $result = [
                     'error' => true,
-                    'result' => $msg,
+                    'response' => $msg,
                 ];
             }
         } else {
             $params['path'] = $this->url . $params['path'];
             $result = [
                 'success' => true,
-                'result' => $params,
+                'response' => $params,
             ];
         }
-//        $result['url'] = $this->url;
         return $result;
     }
 
@@ -184,7 +182,8 @@ class BaseAction extends Action
             } else {
                 $result = [
                     'error' => true,
-                    'result' => Yii::t('base', 'Data writting error'),
+                    'completed' => false,
+                    'response' => Yii::t('base', 'Data writting error'),
                 ];
             }
         } else {
@@ -193,12 +192,20 @@ class BaseAction extends Action
             ) {
                 $result = [
                     'error' => true,
-                    'result' => Yii::t('base', 'Data writting error'),
+                    'completed' => false,
+                    'response' => Yii::t('base', 'Data writting error'),
                 ];
             } else {
                 $result = [
                     'success' => true,
-                    'result' => true,
+                    'completed' => true,
+                    'response' => [
+                        'key' => $params['key'],
+                        'extension' => $params['extension'],
+                        'file_type' => $params['file_type'],
+                        'chunk_key' => $params['chunk_key'],
+                        'total_chunks' => $params['total_chunks'],
+                    ],
                 ];
             }
         }
@@ -220,7 +227,8 @@ class BaseAction extends Action
                 [$width, $height] =  getimagesize($savePath);
             }
             if ($params['file_type'] === 'videos' || $params['file_type'] === 'audios') {
-                [$duration, $poster] = $this->getDuration($savePath, $params['extension']);
+                [$duration, $poster, $hasPoster] = $this->getDuration($savePath, $params['extension']);
+                $poster = $hasPoster ? str_replace($params['extension'], '', $savePath) . '.jpg' : $poster;
             }
         }
 
@@ -248,8 +256,9 @@ class BaseAction extends Action
             $result = $this->saveToDB($info);
         } else {
             $result = [
-                'sucess' => true,
-                'result' => $info,
+                'success' => true,
+                'completed' => true,
+                'response' => $info,
             ];
         }
         return $result;
@@ -263,6 +272,7 @@ class BaseAction extends Action
      */
     private function mergeFile($storePath, $params, $savePath)
     {
+        $chunks = [];
         for ($i = 0; $i < $params['total_chunks']; $i++) {
             $chunkFile = $storePath . DIRECTORY_SEPARATOR . $params['chunk_key'] . '_' . $i;
             if(file_exists($chunkFile) && filesize($chunkFile) > 0) {
@@ -306,7 +316,7 @@ class BaseAction extends Action
 //                $model->path = $this->url . $model->path;
             $result = [
                 'success' => true,
-                'result' => $model,
+                'response' => $model,
             ];
         } else {
             $msg = YII_ENV_PROD
@@ -314,7 +324,7 @@ class BaseAction extends Action
                 : array_values($model->getFirstErrors())[0];
             $result = [
                 'error' => true,
-                'result' => $msg,
+                'response' => $msg,
             ];
         }
         return $result;
@@ -347,13 +357,15 @@ class BaseAction extends Action
             $frame->save($poster);
             Image::thumbnail($poster, 400, null)->save($poster);
             return [
-                'duration' => $duration,
-                'poster' => $poster,
+                $duration,
+                $poster,
+                true
             ];
         } catch (\Exception $exception) {
             return [
-                'duration' => null,
-                'poster' => '/images/default-video.jpg',
+                null,
+                '/images/default-video.jpg',
+                false
             ];
         }
     }
@@ -364,14 +376,6 @@ class BaseAction extends Action
     protected function registerTranslations()
     {
         $i18n = Yii::$app->i18n;
-        $i18n->translations['dropzone*'] = [
-            'class' => PhpMessageSource::class,
-            'sourceLanguage' => 'en-US',
-            'basePath' => Yii::getAlias('@davidxu/dropzone/messages'),
-            'fileMap' => [
-                'dropzone' => 'dropzone.php',
-            ],
-        ];
         $i18n->translations['base*'] = [
             'class' => PhpMessageSource::class,
             'sourceLanguage' => 'en-US',

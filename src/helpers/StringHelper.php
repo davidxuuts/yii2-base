@@ -134,6 +134,17 @@ class StringHelper extends YiiStringHelper
         return strtolower(substr(strtr(base64_encode($bytes), '+/', '__'), 0, $length));
     }
 
+    public static function generatePureString($length = 32)
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        $maxPos = strlen($chars);
+        $str = '';
+        for ($i = 0; $i < $length; $i++) {
+            $str .= $chars[intval(mt_rand() / mt_getrandmax() * $maxPos)];
+    }
+        return $str;
+    }
+
     public static function getInputId($name)
     {
         return Html::getInputIdByName($name);

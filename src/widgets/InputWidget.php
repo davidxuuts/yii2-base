@@ -5,12 +5,14 @@ namespace davidxu\base\widgets;
 use davidxu\base\enums\QiniuUploadRegionEnum;
 use davidxu\base\enums\UploadTypeEnum;
 use davidxu\base\helpers\StringHelper;
+use davidxu\config\helpers\ArrayHelper;
 use Qiniu\Auth;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\i18n\PhpMessageSource;
+use yii\bootstrap4\InputWidget as BS4InputWidget;
 use Yii;
 
 /**
@@ -28,8 +30,9 @@ use Yii;
  * @property string $qiniuCallbackUrl
  * @property array $qiniuCallbackBody
  */
-class InputWidget extends \yii\bootstrap4\InputWidget
+class InputWidget extends BS4InputWidget
 {
+    public $lang;
     public $clientOptions = [];
     public $metaData = [];
     public $url;
@@ -37,8 +40,11 @@ class InputWidget extends \yii\bootstrap4\InputWidget
     public $uploadBasePath = 'uploads/';
     public $drive = UploadTypeEnum::DRIVE_LOCAL;
     public $storeInDB = true;
-    public $chunkSize = 5 * 1024 * 1024;
+    public $chunkSize = 4 * 1024 * 1024;
     public $secondUpload = false;
+    public $maxFiles = 1;
+    public $acceptedFiles;
+    public $existFiles = [];
 
     // Qiniu
     public $qiniuBucket;
@@ -62,11 +68,17 @@ class InputWidget extends \yii\bootstrap4\InputWidget
         'upload_ip' => '$(x:upload_ip)',
     ];
 
+    protected $_secondUpload;
+    protected $_encodedExistFiles;
+    protected $_storeInDB;
+    protected $_encodedMetaData;
+
     public function init()
     {
+        parent::init();
+        $this->lang = $this->lang ?? Yii::$app->language;
         $this->registerTranslations();
         $_view = Yii::$app->getView();
-
         if ($this->name === null && !$this->hasModel()) {
             throw new InvalidConfigException("Either 'name', or 'model' and 'attribute' properties must be specified.");
         }
@@ -74,8 +86,12 @@ class InputWidget extends \yii\bootstrap4\InputWidget
         if (empty($this->name) && (!empty($this->model) && !empty($this->attribute))) {
             $this->name = Html::getInputName($this->model, $this->attribute);
         }
+        $this->maxFiles = $this->maxFiles <= 0 ? 1 : $this->maxFiles;
 
         // second upload function
+        $this->_secondUpload = $this->secondUpload ? 'true' : 'false';
+        $this->_storeInDB = $this->storeInDB ? 'true' : 'false';
+        $this->_encodedExistFiles = Json::encode($this->existFiles);
         if ($this->secondUpload) {
             if (empty($this->getHashUrl) || $this->getHashUrl === '' ) {
                 throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
@@ -130,11 +146,21 @@ class InputWidget extends \yii\bootstrap4\InputWidget
                 }
                 $this->qiniuSecretKey = Yii::$app->params['qiniu.secretKey'];
             }
-//            if (!in_array($this->url, QiniuUploadRegionEnum::getMap())) {
-//                throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
-//                    'attribute' => 'URL',
-//                ]));
-//            }
+        }
+
+        if ($this->drive === UploadTypeEnum::DRIVE_LOCAL) {
+            $this->metaData['file_field'] = $this->name;
+            $this->metaData['store_in_db'] = $this->storeInDB;
+            if (Yii::$app->request->enableCsrfValidation) {
+                $this->metaData[Yii::$app->request->csrfParam] = Yii::$app->request->getCsrfToken();
+            }
+        }
+        if ($this->drive === UploadTypeEnum::DRIVE_QINIU) {
+            $this->metaData = ArrayHelper::merge([
+                'x:store_in_db' => $this->storeInDB,
+                'x:member_id' => Yii::$app->user->isGuest ? 0 : Yii::$app->user->id,
+                'x:upload_ip' => Yii::$app->request->remoteIP,
+            ], $this->metaData);
         }
 
         $systemMaxFileSize = StringHelper::getSizeInByte(get_cfg_var('upload_max_filesize'));
@@ -142,18 +168,20 @@ class InputWidget extends \yii\bootstrap4\InputWidget
         if ($this->chunkSize > $systemMaxFileSize) {
             $this->chunkSize = $systemMaxFileSize;
         }
-        parent::init();
     }
 
     protected function getQiniuToken()
     {
-        $auth = new Auth($this->qiniuAccessKey, $this->qiniuSecretKey);
-        $policy = [
-            'callbackUrl' => $this->qiniuCallbackUrl,
-            'callbackBody' => Json::encode($this->qiniuCallbackBody),
-            'callbackBodyType' => 'application/json',
-        ];
-        return $auth->uploadToken($this->qiniuBucket, null, 3600, $policy);
+        if ($this->drive === UploadTypeEnum::DRIVE_QINIU) {
+            $auth = new Auth($this->qiniuAccessKey, $this->qiniuSecretKey);
+            $policy = [
+                'callbackUrl' => $this->qiniuCallbackUrl,
+                'callbackBody' => Json::encode($this->qiniuCallbackBody),
+                'callbackBodyType' => 'application/json',
+            ];
+            return $auth->uploadToken($this->qiniuBucket, null, 3600, $policy);
+        }
+        return null;
     }
 
     protected function isLocalDrive()

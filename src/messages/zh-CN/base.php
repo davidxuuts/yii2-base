@@ -1,5 +1,8 @@
 <?php
 return [
+    'Unknown error' => '未知错误',
+    'Data writting error' => '数据写入错误',
+
     //Gender
     'Male' => '男',
     'Female' => '女',

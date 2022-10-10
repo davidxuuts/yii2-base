@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'Unknown error' => 'Unknown error',
+    'Data writting error' => 'Data writting error',
+    'Invalid configuration: {attribute}' => 'Invalid configuration: {attribute}',
+
     //Gender
     'Male' => 'Male',
     'Female' => 'Female',
