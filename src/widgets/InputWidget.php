@@ -168,6 +168,7 @@ class InputWidget extends BS4InputWidget
         if ($this->chunkSize > $systemMaxFileSize) {
             $this->chunkSize = $systemMaxFileSize;
         }
+        $this->_encodedMetaData = Json::encode($this->metaData);
     }
 
     protected function getQiniuToken()
