@@ -2,8 +2,8 @@
 
 namespace davidxu\base\assets;
 
-use davidxu\sweetalert2\assets\SweetAlert2Asset;
-use davidxu\sweetalert2\assets\SweetConfirmAsset;
+use davidxu\base\assets\SweetAlert2Asset;
+use davidxu\base\assets\SweetConfirmAsset;
 use yii\bootstrap4\BootstrapAsset;
 use yii\bootstrap4\BootstrapPluginAsset;
 use yii\web\AssetBundle;
