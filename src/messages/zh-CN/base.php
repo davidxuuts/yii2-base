@@ -1,12 +1,27 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
+
 return [
     'Unknown error' => '未知错误',
-    'Data writting error' => '数据写入错误',
+    'Data writing error' => '数据写入错误',
+
+    'Edit' => '编辑',
+    'Update' => '更新',
+    'Create' => '创建',
 
     //Gender
     'Male' => '男',
     'Female' => '女',
     'Unknown' => '未知',
+    'Select image' => '选择图片',
+    'Please select image' => '请选择图片',
+    'Search image name' => '输入图片名称来搜索',
+    'Confirm' => '确认',
+    'Upload image' => '上传图片',
 
     //Common
     '{attribute} cannot be blank.' => '{attribute}不能为空',
@@ -16,7 +31,6 @@ return [
     'Updated successfully' => '更新成功',
     'Updated failed' => '更新失败',
     'Data not found' => '资源未找到',
-    'Error message not fount' => '未捕获到错误信息',
     'Request error' => '请求错误',
     'Response error' => '处理失败',
     'Anonymous user is not allowed, please login first' => '不允许匿名用户，请先登录',
@@ -45,7 +59,6 @@ return [
 
     'Display order' => '排序',
     'Title' => '标题',
-    'Name' => '名称',
     'Config type' => '配置类型',
     'Config name' => '配置标识',
     'Category' => '分类',
@@ -70,4 +83,10 @@ return [
     'Hide remark' => '隐藏备注',
     'Created at' => '创建',
     'Updated at' => '更新',
+
+    'Error message not fount' => '未发现错误信息',
+    'Installed plugins' => '已安装插件',
+    'Install plugin' => '安装插件',
+    'Create plugin' => '新建插件',
+
 ];

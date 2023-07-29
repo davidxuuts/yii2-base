@@ -1,4 +1,9 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base\actions;
 
@@ -14,12 +19,12 @@ class LocalAction extends BaseAction
      * @return array
      * @throws Exception
      */
-    public function run()
+    public function run(): array
     {
-        if (empty($this->url) || $this->url === '') {
+        if (empty($this->url)) {
             $this->url = Yii::getAlias('@web');
         }
-        if (empty($this->fileDir) || $this->fileDir === '') {
+        if (empty($this->fileDir)) {
             $this->fileDir = Url::to('@webroot');
         }
         $post = Yii::$app->request->post();

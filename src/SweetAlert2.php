@@ -1,4 +1,9 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base;
 
@@ -9,6 +14,7 @@ use yii\helpers\Json;
 use yii\helpers\ArrayHelper;
 use davidxu\base\assets\SweetAlert2Asset;
 use yii\web\JsExpression;
+use yii\web\Session;
 
 /**
  * SweetAlter2 widget renders a message from session flash.
@@ -60,19 +66,19 @@ class SweetAlert2 extends Widget
     const INPUT_TYPE_TEL = 'tel';
 
     /**
-     * @var bool If use session flash, default to true
+     * @var bool Whether it use session flash, default to true
      */
-    public $useSessionFlash = true;
+    public bool $useSessionFlash = true;
     /**
      * @var string alert callback
      */
-    public $callback = 'function() {}';
+    public string $callback = 'function() {}';
 
     /**
      * Common configuration.
-     * $toast bool Whether or not an alert should be treated as a toast notification, fefault to true
+     * $toast bool Whether an alert should be treated as a toast notification, default to true
      * $position string The toast position, default to 'top-end'
-     * $timerProgressBar bool Whether timer progres bar shows, default to true
+     * $timerProgressBar bool Whether timer progress bar shows, default to true
      * $timer int|null Auto close timer of the popup. Set in ms (milliseconds)
      * @var array $options Custom configuration
      */
@@ -99,9 +105,9 @@ class SweetAlert2 extends Widget
 
     /**
      * @param array $options
-     * @param array $mixin
+     * @param array|null $mixin
      */
-    public function initSwal(array $options, array $mixin)
+    public function initSwal(array $options, ?array $mixin = null)
     {
         $view = $this->getView();
         SweetAlert2Asset::register($view);
@@ -128,10 +134,10 @@ class SweetAlert2 extends Widget
     }
 
     /**
-     * @param $session bool|mixed|\yii\web\Session
+     * @param bool|mixed|Session $session
      * @return array|bool
      */
-    private function processFlashSession($session)
+    private function processFlashSession(mixed $session): bool|array
     {
         $flash = $session->getAllFlashes();
         if ($flash) {
@@ -147,9 +153,9 @@ class SweetAlert2 extends Widget
     }
 
     /**
-     * @param array $options
+     * @param array|bool $options
      */
-    private function processFlashWidget($options)
+    private function processFlashWidget(array|bool $options)
     {
         if ($options) {
             $this->initSwal($this->getFlashMixin(), $options);
@@ -158,10 +164,8 @@ class SweetAlert2 extends Widget
 
     /**
      * Get widget options
-     *
-     * @return string
      */
-    public function getOptions()
+    public function getOptions(): array
     {
         if ($this->useSessionFlash) {
             $this->options = [
@@ -176,9 +180,10 @@ class SweetAlert2 extends Widget
 
     /**
      * @param string $type
-     * @return false|string
+     * @return bool|string
      */
-    private function getType(string $type) {
+    private function getType(string $type): bool|string
+    {
         $typeArray = [
             self::TYPE_ERROR,
             self::TYPE_SUCCESS,
@@ -189,7 +194,7 @@ class SweetAlert2 extends Widget
         return in_array($type, $typeArray) ? $type : false;
     }
 
-    private function getFlashMixin()
+    private function getFlashMixin(): array
     {
         $mixin = [
             'showConfirmButton' => false,

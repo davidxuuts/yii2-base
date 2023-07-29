@@ -1,4 +1,9 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base\enums;
 
@@ -31,6 +36,14 @@ class AppIdEnum extends BaseEnum
             self::HTML5 => 'Html5',
             self::MERCHANT => 'Merchant',
             self::CONSOLE => 'Console',
+        ];
+    }
+
+    public static function getManagement(): array
+    {
+        return [
+            self::BACKEND => 'Backend',
+            self::MERCHANT => 'Merchant',
         ];
     }
 

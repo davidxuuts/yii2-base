@@ -1,4 +1,9 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 use yii\db\Migration;
 
@@ -20,7 +25,7 @@ class m220825_043920_create_attachment_table extends Migration
             'id' => $this->primaryKey()->comment('ID'),
             'member_id' => $this->integer()->null()->defaultValue(0)->comment('Uploader'),
             'drive' => $this->string(50)->null()->defaultValue('local')->comment('Driver'),
-            'upload_type' => $this->string(10)->null()->defaultValue('images')
+            'file_type' => $this->string(10)->null()->defaultValue('image')
                 ->comment('Upload type'),
             'specific_type' => $this->string(100)->null()->defaultValue('')->comment('Specific type'),
             'base_url' => $this->string(1024)->null()->defaultValue('')->comment('Base URL'),

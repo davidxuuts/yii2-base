@@ -8,18 +8,18 @@
 namespace davidxu\base\assets;
 
 use yii\web\AssetBundle;
+use yii\web\JqueryAsset;
 
-class CropperAsset extends AssetBundle
+class JquerySortableAsset extends AssetBundle
 {
-    public $sourcePath = '@npm/cropperjs/dist';
+    public $sourcePath = '@npm/jquery-sortablejs';
     public $js = [
-        'cropper' . (YII_ENV_PROD ? '.min' : '') . '.js',
+        'jquery-sortable' . (YII_ENV_PROD ? '.min' : '') . '.js',
     ];
     public $css = [
-        'cropper' . (YII_ENV_PROD ? '.min' : '') . '.css',
     ];
 
     public $depends = [
-        BaseAppAsset::class,
+        JqueryAsset::class,
     ];
 }

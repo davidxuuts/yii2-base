@@ -1,18 +1,22 @@
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
+
 function getImgSrc(image) {
     return new Promise(resolve => {
         let moxieImg = new window.moxie.image.Image();
         moxieImg.onload = function () {
-            const img = '<img src="' + moxieImg.getAsDataURL() + '" id="image-cropper">'
+            const img = '<img src="' + moxieImg.getAsDataURL() + '" id="image-cropper" alt="">'
             resolve(img)
         }
         moxieImg.load(image.getSource())
     })
 }
 const modalCropper = function (image) {
-    let buttons = new Array()
-    let imgSrc
     const props = 'type="button" class="btn btn-sm btn-dark" data-toggle="popover" data-trigger="hover" data-placement="top"'
-    buttons = [
+    let buttons = [
         '<span ' + props + 'data-method="setDragMode" data-option="move" data-content="' + i18n('move') +
         '"><i class="fas fa-arrows-alt"></i></span>',
         '<span ' + props + 'data-method="setDragMode" data-option="crop" data-content="' + i18n('crop') +
@@ -59,7 +63,7 @@ function cropImg(up, originalImg, aspectRatio, quality, modal) {
         if (!image || image.length === 0) {
             return
         }
-        aspectRatio = aspectRatio || 1 / 1
+        aspectRatio = aspectRatio || 1
         quality = quality || 1
         let imgSrc, result
         const options = {

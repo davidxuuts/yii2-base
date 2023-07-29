@@ -1,4 +1,9 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base\enums;
 
@@ -26,7 +31,26 @@ class StatusEnum extends BaseEnum
         return [
             self::ENABLED => Yii::t('configtr', 'Enabled'),
             self::DISABLED => Yii::t('configtr', 'Disabled'),
-            // self::DELETE => Yii::t('configtr', 'Deleted'),
+            self::DELETE => Yii::t('configtr', 'Deleted'),
         ];
+    }
+
+    /**
+     * @return array
+     */
+    public static function getBoolMap(): array
+    {
+        return [
+            self::ENABLED => Yii::t('configtr', 'Enabled'),
+            self::DISABLED => Yii::t('configtr', 'Disabled'),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public static function getBoolKeys(): array
+    {
+        return array_keys(static::getBoolMap());
     }
 }

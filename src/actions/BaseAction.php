@@ -1,4 +1,9 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base\actions;
 
@@ -10,8 +15,9 @@ use FFMpeg\FFMpeg;
 use Qiniu\Etag;
 use yii\base\Action;
 use Yii;
+use yii\caching\TagDependency;
 use yii\db\ActiveRecord;
-use yii\helpers\Json;
+use yii\db\ActiveRecordInterface;
 use yii\imagine\Image;
 use yii\web\Response;
 use yii\i18n\PhpMessageSource;
@@ -22,16 +28,16 @@ use yii\base\Exception;
 class BaseAction extends Action
 {
     /** @var string */
-    public $url;
+    public string $url;
 
     /** @var string */
-    public $fileDir;
+    public string $fileDir;
 
     /** @var bool */
-    public $allowAnony = false;
+    public bool $allowAnony = false;
 
-    /** @var ActiveRecord  */
-    public $attachmentModel = Attachment::class;
+    /** @var ActiveRecord|string|ActiveRecordInterface  */
+    public ActiveRecord|string|ActiveRecordInterface $attachmentModel = Attachment::class;
 
     /**
      * @return array[]|void
@@ -51,17 +57,23 @@ class BaseAction extends Action
         }
     }
 
-    protected function getHash($params)
+    /**
+     * @param array|object $params
+     * @return array|true[]
+     */
+    protected function getHash(array|object $params): array
     {
+        /** @var Attachment|ActiveRecordInterface|ActiveRecord $model */
         $model = $this->attachmentModel::findOne(['hash' => $params['hash']]);
         if ($model) {
-            if (!($model->poster) || $model->poster === '') {
+            if (!($model->poster)) {
                 $model->poster = '/images/default-video.jpg';
             }
-            $model->path = $this->url . $model->path;
+//            $model->path = $this->url . $model->path;
             $result = [
                 'success' => true,
                 'response' => $model,
+                'data' => $model,
             ];
         } else {
             $result = [
@@ -72,25 +84,26 @@ class BaseAction extends Action
     }
 
     /**
-     * @param UploadedFile $file
-     * @param array|object $params
+     * @param UploadedFile|null $file
+     * @param object|array $params
      * @param string $url
      * @param string $dir
      * @return array|bool|bool[]
      * @throws Exception
      */
-    protected function local($file, $params, $url, $dir)
+    protected function local(?UploadedFile $file, object|array $params, string $url, string $dir): array|bool
     {
         return $this->processChunk($file, $params, $url, $dir);
     }
 
     /**
-     * @param array $params
+     * @param array|object $params
      * @return array
      */
-    protected function qiniu($params) {
+    protected function qiniu(array|object $params): array
+    {
         if ($params['store_in_db'] === true || $params['store_in_db'] === 'true') {
-            /** @var Attachment $model */
+            /** @var Attachment|ActiveRecordInterface|ActiveRecord $model */
             $model = new $this->attachmentModel;
             $model->attributes = $params;
             $extension = explode('.', $model->extension);
@@ -118,14 +131,16 @@ class BaseAction extends Action
                 $result = [
                     'success' => true,
                     'response' => $model,
+                    'data' => $model,
                 ];
             } else {
                 $msg = YII_ENV_PROD
-                    ? Yii::t('base', 'Data writting error')
+                    ? Yii::t('base', 'Data writing error')
                     : array_values($model->getFirstErrors())[0];
                 $result = [
                     'error' => true,
                     'response' => $msg,
+                    'data' => $msg,
                 ];
             }
         } else {
@@ -133,30 +148,31 @@ class BaseAction extends Action
             $result = [
                 'success' => true,
                 'response' => $params,
+                'data' => $params,
             ];
         }
         return $result;
     }
 
     /**
-     * @param UploadedFile $file
+     * @param UploadedFile|null $file
      * @param array|object $params
      * @param string $url
      * @param string $dir
-     * @return bool
+     * @return array
      * @throws Exception
      */
-    private function processChunk($file, $params, $url, $dir)
+    private function processChunk(?UploadedFile $file, array|object $params, string $url, string $dir): array
     {
-        $chunsStorePath = Yii::getAlias('@runtime/chunks');
-        if (!is_dir($chunsStorePath)) {
-            @mkdir($chunsStorePath, 0755, true);
+        $chunksStorePath = Yii::getAlias('@runtime/chunks');
+        if (!is_dir($chunksStorePath)) {
+            @mkdir($chunksStorePath, 0755, true);
         }
-        if (isset($params['eof']) && ($params['eof'] || $params['eof'] === 'true')) {
-            if (substr($url, -1) === '/') {
+        if (isset($params['eof']) && ($params['eof'] === true || $params['eof'] === 'true')) {
+            if (str_ends_with($url, '/')) {
                 $url = rtrim($url);
             }
-            if (substr($dir, -1) === '/') {
+            if (str_ends_with($dir, '/')) {
                 $dir = rtrim($dir);
             }
 
@@ -177,28 +193,36 @@ class BaseAction extends Action
                 $savePath = $dir . $relativePath;
             }
 
-            if ($this->mergeFile($chunsStorePath, $params, $savePath)) {
+            if ($this->mergeFile($chunksStorePath, $params, $savePath)) {
                 $result = $this->getInfo($savePath, $urlPath, $params);
             } else {
                 $result = [
                     'error' => true,
                     'completed' => false,
-                    'response' => Yii::t('base', 'Data writting error'),
+                    'response' => Yii::t('base', 'Data writing error'),
                 ];
             }
         } else {
-            if (!($file->saveAs($chunsStorePath . DIRECTORY_SEPARATOR
+            if (!($file->saveAs($chunksStorePath . DIRECTORY_SEPARATOR
                 . $params['chunk_key'] . '_' . $params['chunk_index']))
             ) {
                 $result = [
                     'error' => true,
                     'completed' => false,
-                    'response' => Yii::t('base', 'Data writting error'),
+                    'response' => Yii::t('base', 'Data writing error'),
+                    'data' => Yii::t('base', 'Data writing error'),
                 ];
             } else {
                 $result = [
                     'success' => true,
                     'completed' => true,
+                    'data' => [
+                        'key' => $params['key'],
+                        'extension' => $params['extension'],
+                        'file_type' => $params['file_type'],
+                        'chunk_key' => $params['chunk_key'],
+                        'total_chunks' => $params['total_chunks'],
+                    ],
                     'response' => [
                         'key' => $params['key'],
                         'extension' => $params['extension'],
@@ -215,15 +239,15 @@ class BaseAction extends Action
     /**
      * @param string $savePath
      * @param string $urlPath
-     * @param array|Attachment $params
+     * @param array|object $params
      * @return array
      */
-    private function getInfo($savePath, $urlPath, $params)
+    private function getInfo(string $savePath, string $urlPath, array|object $params): array
     {
         $width = $height = 0;
         $duration = $poster = null;
         if (isset($params['file_type'])) {
-            if ($params['file_type'] === 'images') {
+            if ($params['file_type'] === AttachmentTypeEnum::TYPE_IMAGE) {
                 [$width, $height] =  getimagesize($savePath);
             }
             if ($params['file_type'] === 'videos' || $params['file_type'] === 'audios') {
@@ -252,12 +276,16 @@ class BaseAction extends Action
             'upload_ip' => Yii::$app->request->remoteIP,
         ];
 
-        if (isset($params['store_in_db']) && ($params['store_in_db'] || $params['store_in_db'] === 'true')) {
+        if (isset($params['store_in_db']) && (true === $params['store_in_db'] || $params['store_in_db'] === 'true')) {
             $result = $this->saveToDB($info);
         } else {
+            if ($cache = Yii::$app->cache) {
+                $cache->set($info['path'], $info, null, new TagDependency(['tags' => $info['path'] . $info['hash']]));
+            }
             $result = [
                 'success' => true,
                 'completed' => true,
+                'data' => $info,
                 'response' => $info,
             ];
         }
@@ -270,7 +298,7 @@ class BaseAction extends Action
      * @param string $savePath
      * @return bool
      */
-    private function mergeFile($storePath, $params, $savePath)
+    private function mergeFile(string $storePath, array|object $params, string $savePath): bool
     {
         $chunks = [];
         for ($i = 0; $i < $params['total_chunks']; $i++) {
@@ -280,7 +308,6 @@ class BaseAction extends Action
 //                $chunks[$i] = $params['chunk_key'] . '_' . $i;
             } else {
                 break;
-                return false;
             }
         }
 
@@ -303,27 +330,55 @@ class BaseAction extends Action
     }
 
     /**
-     * @param array $info
+     * @param array|object $info
      * @return array
      */
-    private function saveToDB($info)
+    private function saveToDB(array|object $info): array
     {
-        /** @var ActiveRecord $model */
+        /** @var ActiveRecord|ActiveRecordInterface|object|Attachment|array $model */
+        if (isset($info['hash'])) {
+            $model = $this->attachmentModel::findOne(['hash' => $info['hash']]);
+            if ($model) {
+                if (!($model->poster) || $model->poster === '') {
+                    $model->poster = '/images/default-video.jpg';
+                }
+                $model->path = $this->url . $model->path;
+                $result = [
+                    'success' => true,
+                    'data' => $model,
+                    'response' => $model,
+                ];
+            } else {
+                $result = $this->saveNewRecord($info);
+            }
+        } else {
+            $result = $this->saveNewRecord($info);
+        }
+        return $result;
+    }
+
+    /**
+     * @param array|object $info
+     * @return array
+     */
+    private function saveNewRecord(array|object $info): array
+    {
         $model = new $this->attachmentModel;
         $model->attributes = $info;
         if ($model->save()) {
             $model->refresh();
-//                $model->path = $this->url . $model->path;
             $result = [
                 'success' => true,
+                'data' => $model,
                 'response' => $model,
             ];
         } else {
             $msg = YII_ENV_PROD
-                ? Yii::t('base', 'Data writting error')
+                ? Yii::t('base', 'Data writing error')
                 : array_values($model->getFirstErrors())[0];
             $result = [
                 'error' => true,
+                'data' => $msg,
                 'response' => $msg,
             ];
         }
@@ -333,9 +388,9 @@ class BaseAction extends Action
     /**
      * @param string $file
      * @param string $extension
-     * @return mixed|void|null
+     * @return array
      */
-    private function getDuration($file, $extension)
+    private function getDuration(string $file, string $extension): array
     {
         try {
             $ffProbe = isset(Yii::$app->params['ffmpeg'])
@@ -355,13 +410,13 @@ class BaseAction extends Action
             $frame = $video->frame(TimeCode::fromSeconds($offset));
             $poster = str_replace($extension, '', $file) . '.jpg';
             $frame->save($poster);
-            Image::thumbnail($poster, 400, null)->save($poster);
+            Image::thumbnail($poster, 400, 0)->save($poster);
             return [
                 $duration,
                 $poster,
                 true
             ];
-        } catch (\Exception $exception) {
+        } catch (\Exception) {
             return [
                 null,
                 '/images/default-video.jpg',
@@ -373,7 +428,7 @@ class BaseAction extends Action
     /**
      * @return void
      */
-    protected function registerTranslations()
+    protected function registerTranslations(): void
     {
         $i18n = Yii::$app->i18n;
         $i18n->translations['base*'] = [

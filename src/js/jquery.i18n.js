@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
+
 const language = {
     'en_US': {
         'crop': 'Crop',
@@ -13,7 +19,11 @@ const language = {
         'scale x': 'Scale X',
         'scale y': 'Scale Y',
         'reset': 'Reset',
-        'Loading ...': 'Loading ...'
+        'Loading ...': 'Loading ...',
+        'free': 'Free',
+        'cropperModalTitle': 'crop image',
+        'save': 'Save',
+        'close': 'Close',
     },
     'zh_CN': {
         'crop': '裁剪',
@@ -26,10 +36,14 @@ const language = {
         'move down': '下移',
         'rotate left': '向左旋转',
         'rotate right': '向右旋转',
-        'scale x': '横向放大',
-        'scale y': '纵向放大',
+        'scale x': '横向翻转',
+        'scale y': '纵向翻转',
         'reset': '复位',
-        'Loading ...': '加载中 ...'
+        'Loading ...': '加载中 ...',
+        'free': '自由变形',
+        'cropperModalTitle': '裁剪图片',
+        'save': '保存',
+        'close': '关闭',
     }
 }
 function i18n(name, lang) {

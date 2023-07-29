@@ -1,9 +1,12 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base\assets;
 
-use davidxu\base\assets\SweetAlert2Asset;
-use davidxu\base\assets\SweetConfirmAsset;
 use yii\bootstrap4\BootstrapAsset;
 use yii\bootstrap4\BootstrapPluginAsset;
 use yii\web\AssetBundle;

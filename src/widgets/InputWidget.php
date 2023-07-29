@@ -1,19 +1,23 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base\widgets;
 
-use davidxu\base\enums\QiniuUploadRegionEnum;
 use davidxu\base\enums\UploadTypeEnum;
 use davidxu\base\helpers\StringHelper;
 use davidxu\config\helpers\ArrayHelper;
 use Qiniu\Auth;
-use yii\base\Exception;
 use yii\base\InvalidConfigException;
 use yii\helpers\Html;
 use yii\helpers\Json;
 use yii\i18n\PhpMessageSource;
 use yii\bootstrap4\InputWidget as BS4InputWidget;
 use Yii;
+use yii\web\View;
 
 /**
  * Input widget
@@ -32,26 +36,29 @@ use Yii;
  */
 class InputWidget extends BS4InputWidget
 {
-    public $lang;
+
+    public ?string $lang;
     public $clientOptions = [];
-    public $metaData = [];
-    public $url;
-    public $getHashUrl;
-    public $uploadBasePath = 'uploads/';
-    public $drive = UploadTypeEnum::DRIVE_LOCAL;
-    public $storeInDB = true;
-    public $chunkSize = 4 * 1024 * 1024;
-    public $secondUpload = false;
-    public $maxFiles = 1;
-    public $acceptedFiles;
-    public $existFiles = [];
+    public array $metaData = [];
+    public ?array $headers = null;
+    public ?string $url = null;
+    public ?string $getHashUrl = '/upload/selector';
+    public string $uploadBasePath = 'uploads/';
+    public string $drive = UploadTypeEnum::DRIVE_LOCAL;
+    public bool $storeInDB = true;
+    public int|float $chunkSize = 4 * 1024 * 1024;
+    public bool $secondUpload = false;
+    public int|string $maxFiles = 1;
+    public string|array|null $acceptedFiles = null;
+    public ?array $existFiles = null;
+    public string $selectorUrl = '/upload/selector';
 
     // Qiniu
-    public $qiniuBucket;
-    public $qiniuAccessKey;
-    public $qiniuSecretKey;
-    public $qiniuCallbackUrl;
-    public $qiniuCallbackBody = [
+    public ?string $qiniuBucket = null;
+    public ?string $qiniuAccessKey = null;
+    public ?string $qiniuSecretKey = null;
+    public ?string $qiniuCallbackUrl = null;
+    public array $qiniuCallbackBody = [
         'drive' => UploadTypeEnum::DRIVE_QINIU,
         'specific_type' => '$(mimeType)',
         'file_type' => '$(x:file_type)',
@@ -68,17 +75,27 @@ class InputWidget extends BS4InputWidget
         'upload_ip' => '$(x:upload_ip)',
     ];
 
-    protected $_secondUpload;
-    protected $_encodedExistFiles;
-    protected $_storeInDB;
-    protected $_encodedMetaData;
+    protected View|string|null $_view = null;
+    protected ?string $_secondUpload = null;
+    protected ?string $_encodedExistFiles = null;
+    protected string $_storeInDB = 'false';
+    protected ?string $_encodedMetaData = null;
+//    protected ?string $_qiniuToken = null;
 
+    /**
+     * @throws InvalidConfigException
+     */
     public function init()
     {
         parent::init();
         $this->lang = $this->lang ?? Yii::$app->language;
-        $this->registerTranslations();
-        $_view = Yii::$app->getView();
+        $this->_view = $this->getView();
+        $this->registerBaseTranslations();
+
+        //TODO validation need
+        if ($this->selectorUrl) {
+            $this->selectorUrl = Yii::getAlias('@web' . $this->selectorUrl);
+        }
         if ($this->name === null && !$this->hasModel()) {
             throw new InvalidConfigException("Either 'name', or 'model' and 'attribute' properties must be specified.");
         }
@@ -87,13 +104,29 @@ class InputWidget extends BS4InputWidget
             $this->name = Html::getInputName($this->model, $this->attribute);
         }
         $this->maxFiles = $this->maxFiles <= 0 ? 1 : $this->maxFiles;
-
+        if (isset($this->acceptedFiles) && is_array($this->acceptedFiles)) {
+            $this->acceptedFiles = implode(',', $this->acceptedFiles);
+        }
         // second upload function
         $this->_secondUpload = $this->secondUpload ? 'true' : 'false';
         $this->_storeInDB = $this->storeInDB ? 'true' : 'false';
-        $this->_encodedExistFiles = Json::encode($this->existFiles);
+
+        $keysInclude = ['name', 'size', 'path'];
+        if ((!empty($this->existFiles)) && is_array($this->existFiles)) {
+            if (count($this->existFiles) === count($this->existFiles, COUNT_RECURSIVE)) {
+                $this->existFiles = [$this->existFiles];
+            }
+            $include = true;
+            foreach ($this->existFiles as $existFile) {
+                $include = $include && array_intersect($keysInclude, array_keys($existFile)) === $keysInclude;
+            }
+            if (!$include) {
+                throw new InvalidConfigException("'name', 'size' and 'path' must be specified.");
+            }
+        }
+        $this->_encodedExistFiles = Json::encode($this->existFiles ?? []);
         if ($this->secondUpload) {
-            if (empty($this->getHashUrl) || $this->getHashUrl === '' ) {
+            if (empty($this->getHashUrl)) {
                 throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
                     'attribute' => 'getHashUrl',
                 ]));
@@ -102,7 +135,7 @@ class InputWidget extends BS4InputWidget
 
         // Local
         if ($this->drive === UploadTypeEnum::DRIVE_LOCAL) {
-            if (empty($this->url) || $this->url === '' ) {
+            if (empty($this->url)) {
                 throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
                     'attribute' => 'url',
                 ]));
@@ -111,7 +144,7 @@ class InputWidget extends BS4InputWidget
 
         // Qiniu
         if ($this->drive === UploadTypeEnum::DRIVE_QINIU) {
-            if (empty($this->qiniuCallbackUrl) || $this->qiniuCallbackUrl === '') {
+            if (empty($this->qiniuCallbackUrl)) {
                 if (!isset(Yii::$app->params['qiniu.callbackUrl']) || Yii::$app->params['qiniu.callbackUrl'] === '') {
                     throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
                         'attribute' => 'qiniu.callbackUrl',
@@ -120,7 +153,7 @@ class InputWidget extends BS4InputWidget
                 $this->qiniuCallbackUrl = Yii::$app->params['qiniu.callbackUrl'];
             }
 
-            if (empty($this->qiniuBucket) || $this->qiniuBucket === '') {
+            if (empty($this->qiniuBucket)) {
                 if (!isset(Yii::$app->params['qiniu.bucket']) || Yii::$app->params['qiniu.bucket'] === '') {
                     throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
                         'attribute' => 'qiniu.bucket',
@@ -129,7 +162,7 @@ class InputWidget extends BS4InputWidget
                 $this->qiniuBucket = Yii::$app->params['qiniu.bucket'];
             }
 
-            if (empty($this->qiniuAccessKey) || $this->qiniuAccessKey === '') {
+            if (empty($this->qiniuAccessKey)) {
                 if (!isset(Yii::$app->params['qiniu.accessKey']) || Yii::$app->params['qiniu.accessKey'] === '') {
                     throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
                         'attribute' => 'qiniu.accessKey',
@@ -138,7 +171,7 @@ class InputWidget extends BS4InputWidget
                 $this->qiniuAccessKey = Yii::$app->params['qiniu.accessKey'];
             }
 
-            if (empty($this->qiniuSecretKey) || $this->qiniuSecretKey === '') {
+            if (empty($this->qiniuSecretKey)) {
                 if (!isset(Yii::$app->params['qiniu.secretKey']) || Yii::$app->params['qiniu.secretKey'] === '') {
                     throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
                         'attribute' => 'qiniu.secretKey',
@@ -171,7 +204,7 @@ class InputWidget extends BS4InputWidget
         $this->_encodedMetaData = Json::encode($this->metaData);
     }
 
-    protected function getQiniuToken()
+    protected function getQiniuToken(): ?string
     {
         if ($this->drive === UploadTypeEnum::DRIVE_QINIU) {
             $auth = new Auth($this->qiniuAccessKey, $this->qiniuSecretKey);
@@ -185,27 +218,27 @@ class InputWidget extends BS4InputWidget
         return null;
     }
 
-    protected function isLocalDrive()
+    protected function isLocalDrive(): string
     {
         return $this->drive === UploadTypeEnum::DRIVE_LOCAL ? 'true' : 'false';
     }
 
-    protected function isQiniuDrive()
+    protected function isQiniuDrive(): string
     {
         return $this->drive === UploadTypeEnum::DRIVE_QINIU ? 'true' : 'false';
     }
 
-    protected function isCosDrive()
+    protected function isCosDrive(): string
     {
         return $this->drive === UploadTypeEnum::DRIVE_COS ? 'true' : 'false';
     }
 
-    protected function isOssDrive()
+    protected function isOssDrive(): string
     {
         return $this->drive === UploadTypeEnum::DRIVE_OSS ? 'true' : 'false';
     }
 
-    protected function registerTranslations()
+    protected function registerBaseTranslations()
     {
         $i18n = Yii::$app->i18n;
         $i18n->translations['base*'] = [

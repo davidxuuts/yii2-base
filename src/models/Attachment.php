@@ -1,10 +1,17 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base\models;
 
+use davidxu\base\enums\AttachmentTypeEnum;
+use davidxu\base\enums\StatusEnum;
+use davidxu\base\enums\UploadTypeEnum;
 use Yii;
 use yii\behaviors\TimestampBehavior;
-use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\BaseActiveRecord;
 
@@ -33,9 +40,12 @@ use yii\db\BaseActiveRecord;
  * @property int $created_at Created at
  * @property int $updated_at Updated at
  *
+ * @property int $material_type Compare to WeChat material type
+ *
  */
 class Attachment extends ActiveRecord
 {
+    public int $material_type = 1;
     /**
      * @return array
      */
@@ -69,9 +79,12 @@ class Attachment extends ActiveRecord
             [['member_id', 'size', 'year', 'month', 'day', 'width', 'height', 'status'], 'integer'],
             [['drive', 'extension', 'duration', 'upload_ip'], 'string', 'max' => 50],
             [['width', 'height'], 'default', 'value' => 0],
-            ['drive', 'default', 'value' => 'local'],
-            ['status', 'default', 'value' => 1],
+            [['drive'], 'in', 'range' => UploadTypeEnum::getKeys()],
+            ['drive', 'default', 'value' => UploadTypeEnum::getKeys()],
+            ['status', 'in', 'range' => StatusEnum::getKeys()],
+            ['status', 'default', 'value' => StatusEnum::ENABLED],
             [['file_type'], 'string', 'max' => 10],
+            [['file_type'], 'in', 'range' => AttachmentTypeEnum::getKeys()],
             [['specific_type', 'hash'], 'string', 'max' => 100],
             [['path', 'poster'], 'string', 'max' => 1024],
             [['name'], 'string', 'max' => 200],

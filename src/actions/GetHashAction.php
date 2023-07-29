@@ -1,21 +1,21 @@
 <?php
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
 
 namespace davidxu\base\actions;
 
 use Yii;
-use yii\web\BadRequestHttpException;
 use yii\web\JsonParser;
 use yii\web\Response;
 
 class GetHashAction extends BaseAction
 {
-    /**
-     * @return void
-     * @throws BadRequestHttpException
-     */
-    public function run()
+    public function run(): array
     {
-        $this->allowAnony = true;
+//        $this->allowAnony = true;
         Yii::$app->request->parsers['application/json'] = JsonParser::class;
         Yii::$app->response->format = Response::FORMAT_JSON;
         return $this->getHash(Yii::$app->request->post());

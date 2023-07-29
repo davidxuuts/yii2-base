@@ -1,16 +1,22 @@
+/*
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */
+
 function generateRandomKey(length) {
     length = length || 32;
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
     let maxPos = chars.length;
     let str = ''
-    for (i = 0; i < length; i++) {
+    for (let i = 0; i < length; i++) {
         str += chars.charAt(Math.floor(Math.random() * maxPos));
     }
     return str
 }
 
 function getHash(file) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
         let hash = ''
         let reader = new FileReader()
         reader.readAsArrayBuffer(file)
@@ -23,15 +29,8 @@ function getHash(file) {
 
 function getFileInfo(file, basePath) {
     const mimeType = (file.type.split('/', 1)[0]).toLowerCase()
-    let fileType = 'others'
-    if (mimeType === 'image') {
-        fileType = 'images'
-    } else if (mimeType === 'video') {
-        fileType = 'videos'
-    } else if (mimeType === 'audio') {
-        fileType = 'audios'
-    }
-    const extension = (file.name.substr(file.name.lastIndexOf('.'))).toLowerCase()
+    let fileType = ['image', 'video', 'audio'].includes(mimeType) > 0 ? mimeType : 'other'
+    const extension = (file.name.substring(file.name.lastIndexOf('.'))).toLowerCase()
     const key = basePath + fileType + '/' + generateRandomKey() + extension
     const chunkKey = key.replace(/\//g, '_').replace(/\./g, '_')
     return {

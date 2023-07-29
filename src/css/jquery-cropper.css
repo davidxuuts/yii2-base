@@ -1,22 +1,5 @@
-#cropper-button-group {
-  position: absolute;
-  bottom: 2.5rem;
-  padding-left: 1rem;
-}
-
-.img-container img {
-  display: block;
-  max-width: 100%;
-}
-
-.ribbon-wrapper-custom {
-  height: 70px;
-  overflow: hidden;
-  position: absolute;
-  right: 0.25rem;
-  top: 0.25rem;
-  width: 70px;
-  z-index: 10;
-}
-
-/*# sourceMappingURL=jquery-cropper.css.map */
+/*!
+ * Copyright (c) 2023.
+ * @author David Xu <david.xu.uts@163.com>
+ * All rights reserved.
+ */#cropper-button-group{position:absolute;bottom:2.5rem;padding-left:1rem;z-index:10}.img-container img{display:block;max-width:100%}/*# sourceMappingURL=jquery-cropper.css.map */
