@@ -82,3 +82,4 @@ Array.prototype.remove = function (val) {
         this.splice(index, 1);
     }
 }
+

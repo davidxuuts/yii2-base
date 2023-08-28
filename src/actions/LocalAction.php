@@ -1,9 +1,4 @@
 <?php
-/*
- * Copyright (c) 2023.
- * @author David Xu <david.xu.uts@163.com>
- * All rights reserved.
- */
 
 namespace davidxu\base\actions;
 
@@ -31,6 +26,6 @@ class LocalAction extends BaseAction
         $file = UploadedFile::getInstanceByName('file');
 
         Yii::$app->response->format = Response::FORMAT_JSON;
-        return $this->local($file, $post, $this->url, $this->fileDir);
+        return $this->localInfo($file, $post, $this->url, $this->fileDir);
     }
 }

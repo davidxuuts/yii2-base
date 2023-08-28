@@ -15,7 +15,7 @@ class GetHashAction extends BaseAction
 {
     public function run(): array
     {
-//        $this->allowAnony = true;
+        $this->allowAnony = true;
         Yii::$app->request->parsers['application/json'] = JsonParser::class;
         Yii::$app->response->format = Response::FORMAT_JSON;
         return $this->getHash(Yii::$app->request->post());

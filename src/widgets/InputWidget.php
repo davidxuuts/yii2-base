@@ -42,7 +42,7 @@ class InputWidget extends BS4InputWidget
     public array $metaData = [];
     public ?array $headers = null;
     public ?string $url = null;
-    public ?string $getHashUrl = '/upload/selector';
+    public ?string $getHashUrl = '/upload/get-hash';
     public string $uploadBasePath = 'uploads/';
     public string $drive = UploadTypeEnum::DRIVE_LOCAL;
     public bool $storeInDB = true;
@@ -147,7 +147,7 @@ class InputWidget extends BS4InputWidget
             if (empty($this->qiniuCallbackUrl)) {
                 if (!isset(Yii::$app->params['qiniu.callbackUrl']) || Yii::$app->params['qiniu.callbackUrl'] === '') {
                     throw new InvalidConfigException(Yii::t('base', 'Invalid configuration: {attribute}', [
-                        'attribute' => 'qiniu.callbackUrl',
+                        'attribute' => 'qiniuCallbackUrl',
                     ]));
                 }
                 $this->qiniuCallbackUrl = Yii::$app->params['qiniu.callbackUrl'];
