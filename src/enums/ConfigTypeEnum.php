@@ -56,7 +56,7 @@ class ConfigTypeEnum extends BaseEnum
             self::CONFIG_IMAGES => Yii::t('base', 'Images'),
             self::CONFIG_FILE => Yii::t('base', 'File'),
             self::CONFIG_FILES => Yii::t('base', 'Files'),
-            self::CONFIG_CROPPER => Yii::t('base', 'Cropper'),
+//            self::CONFIG_CROPPER => Yii::t('base', 'Cropper'),
         ];
     }
 

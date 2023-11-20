@@ -65,7 +65,6 @@ class BaseAction extends Action
             }
             $result = [
                 'success' => true,
-                'response' => $model,
                 'data' => $model,
             ];
         } else {
@@ -96,6 +95,25 @@ class BaseAction extends Action
      */
     protected function qiniuInfo(array $params): array
     {
+        $extension = explode('.', $params['extension']);
+        $params['extension'] = $extension[count($extension) - 1];
+        if ($params['file_type'] === 'null' && $params['specific_type']) {
+            $specificType = explode('/', $params['specific_type']);
+            $params['file_type'] = $specificType[0];
+        }
+        if ($params['width'] === 'null') {
+            $params['width'] = 0;
+        }
+        if ($params['height'] === 'null') {
+            $params['height'] = 0;
+        }
+        if ($params['duration'] === 'null' || $params['duration'] === '') {
+            $params['duration'] = null;
+        }
+        if ($params['upload_ip'] === 'null') {
+            $params['upload_ip'] = $this->getClientIP();
+        }
+
         if ($params['store_in_db'] === true || $params['store_in_db'] === 'true') {
             $model = $this->attachmentModel::findOne(['hash' => $params['hash']]);
             if ($model) {
@@ -107,23 +125,30 @@ class BaseAction extends Action
             /** @var ActiveRecord|Attachment|string $model */
             $model = new $this->attachmentModel;
             $model->attributes = $params;
-            $extension = explode('.', $model->extension);
-            $model->extension = $extension[count($extension) - 1];
-            if ($model->width === 'null') {
-                $model->width = 0;
-            }
-            if ($model->height === 'null') {
-                $model->height = 0;
-            }
-            if ($model->duration === 'null' || $model->duration === '') {
-                $model->duration = null;
-            }
+//            $extension = explode('.', $model->extension);
+//            $model->extension = $extension[count($extension) - 1];
+//            if ($model->file_type === 'null' && $model->specific_type) {
+//                $specificType = explode('/', $model->specific_type);
+//                $model->file_type = $specificType[count($specificType) - 1];
+//            }
+//            if ($model->width === 'null') {
+//                $model->width = 0;
+//            }
+//            if ($model->height === 'null') {
+//                $model->height = 0;
+//            }
+//            if ($model->duration === 'null' || $model->duration === '') {
+//                $model->duration = null;
+//            }
             if (!str_starts_with($model->path, '/')) {
                 $model->path = '/' . $model->path;
             }
             $model->year = date('Y');
             $model->month = date('m');
             $model->day = date('d');
+//            if ($model->upload_ip === 'null') {
+//                $model->upload_ip = Yii::$app->request->userIP;
+//            }
             if ($model->save()) {
                 $model->refresh();
                 $result = [
@@ -300,7 +325,7 @@ class BaseAction extends Action
             'height' => $height,
             'duration' => $duration,
             'hash' => Etag::sum($savePath) ? Etag::sum($savePath)[0] : null,
-            'upload_ip' => Yii::$app->request->remoteIP,
+            'upload_ip' => Yii::$app->request->userIP,
         ];
 
         if (isset($params['store_in_db']) && (true === $params['store_in_db'] || $params['store_in_db'] === 'true')) {
@@ -407,6 +432,26 @@ class BaseAction extends Action
                 'data' => $msg,
             ];
         }
+    }
+
+    /**
+     * @return array|string|null
+     */
+    private function getClientIP(): array|string|null
+    {
+        $header = Yii::$app->request->getHeaders();
+        if ($header->get('x-real-ip')) {
+            $ip = $header->get('x-real-ip');
+        } else if ($header->get('HTTP_CLIENT_IP')) {
+            $ip = $header->get('HTTP_CLIENT_IP');
+        } else if ($header->get('HTTP_X_FORWARDED_FOR')) {
+            $ip = $header->get('HTTP_X_FORWARDED_FOR');
+        } else if ($header->get('REMOTE_ADDR')) {
+            $ip = $header->get('REMOTE_ADDR');
+        } else {
+            $ip = Yii::$app->request->getUserIP();
+        }
+        return $ip;
     }
 
     /**
